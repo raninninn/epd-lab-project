@@ -26,9 +26,7 @@ param_t inference(param_t *input)
     param_t output[10];
 
     for (int i = 0; i < 784; ++i) {
-        int32_t scaled = (int32_t)input[i] * FIRST_ACT_SCALE;
-        if (scaled > 127) scaled = 127;
-        if (scaled < -128) scaled = -128;
+        int32_t scaled = clip((int32_t)input[i] * FIRST_ACT_SCALE, MIN_PARAM, MAX_PARAM);
         input[i] = (param_t)scaled;
     }
     conv_layer(WEIGHTS_C1, 1, 4, input, 28, c1_out, 24, 1, 0, FIRST_ACT_SCALE, SECOND_ACT_SCALE, 1 << WEIGHTS_C1_SCALE);

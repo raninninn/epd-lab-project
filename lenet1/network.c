@@ -5,7 +5,6 @@
 #include "network.h"
 #define KERNEL_SIZE 5
 #define POOL_SIZE 2
-#define THRESHOLD 0
 
 param_t clip(int32_t input, param_t min, param_t max)
 {
@@ -16,6 +15,8 @@ param_t clip(int32_t input, param_t min, param_t max)
     return input;
 }
 
+// There are many more efficient ways to do convolution, but that would be out
+// of scope.
 void convolve(
     const param_t *weights, size_p in_channels,
     const param_t *input, size_p in_size,
@@ -23,7 +24,8 @@ void convolve(
     size_p output_channel,
     size_p stride,
     size_p padding,
-    size_p act_scale, size_p weight_scale)
+    size_p act_scale_a, size_p act_scale_b,
+    size_p weight_scale)
 {
     for (size_t oy = 0; oy < out_size; ++oy)
     {
@@ -69,12 +71,17 @@ void conv_layer(
     param_t *output, size_p out_size,
     size_p stride,
     size_p padding,
-    size_p act_scale, size_p weight_scale)
+    size_p act_scale_a, size_p act_scale_b,
+    size_p weight_scale)
 {
     assert(out_size == (in_size + 2 * padding - KERNEL_SIZE) / stride + 1);
     for (size_t oc = 0; oc < out_channels; ++oc)
     {
-        convolve(weights, in_channels, input, in_size, output, out_size, oc, stride, padding, act_scale, weight_scale);
+        convolve(weights, in_channels,
+            input, in_size,
+            output, out_size, oc,
+            stride, padding,
+            act_scale_a, act_scale_b, weight_scale);
     }
 }
 
@@ -168,5 +175,5 @@ param_t rescale(
     size_p weight_scale)
 {
       int32_t tmp = div_bankers_rounding(input * act_scale_b, act_scale_a * weight_scale);
-      return clip(tmp, -128, 127);
+      return clip(tmp, MIN_PARAM, MAX_PARAM);
 }
