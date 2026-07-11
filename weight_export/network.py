@@ -30,6 +30,7 @@ parser.add_argument("-c", "--report-scales", action='store_true', help="Print th
 parser.add_argument("-p", "--report-predictions", action='store_true', help="Print the predictions")
 parser.add_argument("-a", "--report-accuracy", action='store_true', help="Print the test accuracy")
 parser.add_argument("-q", "--suppress-progress", action='store_false', help="Suppress progress reporting")
+parser.add_argument("-o", "--capture-outputs", type=int, default=-1, help="Capture intermediate outputs of all layers for a given input. -1 to capture no outputs.")
 args = parser.parse_args()
 
 class Int8WeightPerTensorPoT(Int8WeightPerTensorFloat):
@@ -114,7 +115,7 @@ with torch.no_grad():
     capture_scales = args.report_scales
     output_predictions = args.report_predictions
     counter = 0
-    breaker = 646
+    breaker = args.capture_outputs
     for images, labels in test_loader:
         images, labels = images.to(device), labels.to(device)
         x = model[0](images)
@@ -167,8 +168,6 @@ with torch.no_grad():
         correct += (predicted == labels).sum().item()
         if output_predictions:
             print(predicted.data.item())
-        if counter == breaker:
-            break
         counter += 1
 
 if args.report_accuracy:
