@@ -42,24 +42,23 @@ num_epochs = args.epochs
 seed = args.seed
 bw = 8
 
-transform = transforms.Compose([
-    v2.ToImage(),
-    v2.ToDtype(torch.int8)
-])
+def parity_transform(img):
+    arr = (np.array(img, dtype=np.uint8) // 2).astype(np.int8)
+    return torch.tensor(arr, dtype=torch.int8).unsqueeze(0)
 
 # Load the training dataset
 train_dataset = torchvision.datasets.MNIST(
     root='./data',
     train=True, 
     download=True,
-    transform=transform
+    transform=parity_transform
 )
 
 test_dataset = torchvision.datasets.MNIST(
     root='./data',
     train=False,
     download=True,
-    transform=transform
+    transform=parity_transform
 )
 
 train_loader = DataLoader(train_dataset, batch_size=bsize, shuffle=True)

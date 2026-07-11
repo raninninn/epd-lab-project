@@ -10,7 +10,7 @@ args = argparser.parse_args()
 
 # transform images to flattened numpy arrays
 def to_np_array(img):
-    return np.array(img, dtype=np.int8).flatten()
+    return (np.array(img, dtype=np.uint8) // 2).astype(np.int8).flatten()
 
 train_dataset = MNIST(
     root="./data",
