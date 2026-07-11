@@ -4,11 +4,15 @@
 #include "../weight_export/weights_c1.h" // contains weights
 #include "../weight_export/weights_c3.h" // contains weights
 #include "../weight_export/weights_out.h" // contains weights
-//#include "../data_export/inputs/test_0.h" // contains inputs
-#include "test.h"
-
-#define FIRST_LAYER_ACT_SCALE 1 << 3
-#define OTHER_LAYER_ACT_SCALE 1 << 2
+#include "../weight_export/act_scales.h" // contains quantization scales for activations
+#include "test.h"/*
+#include "../data_export/inputs/test_646.h" // contains inputs
+#include "../weight_export/c1_out.h"
+#include "../weight_export/s2_out.h"
+#include "../weight_export/c3_out.h"
+#include "../weight_export/s4_out.h"
+#include "../weight_export/fc_out.h"
+*/
 
 param_t inference(param_t *input)
 {
@@ -17,21 +21,34 @@ param_t inference(param_t *input)
     param_t c3_out[8 * 8 * 12];
     param_t s4_out[4 * 4 * 12];
     param_t output[10];
-    conv_layer(WEIGHTS_C1, 1, 4, input, 28, c1_out, 24, 1, 0, FIRST_LAYER_ACT_SCALE / OTHER_LAYER_ACT_SCALE, 1 << WEIGHTS_C1_SCALE);
-    /*for (size_t i = 0; i < 24 * 24 * 4; ++i)
-      printf("%d vs %d\n", c1_out[i], C1_OUT[i]);
-    return 1;*/
+
+    for (int i = 0; i < 784; ++i) {
+        int32_t scaled = (int32_t)input[i] * FIRST_ACT_SCALE;
+        if (scaled > 127) scaled = 127;
+        if (scaled < -128) scaled = -128;
+        input[i] = (param_t)scaled;
+    }
+    conv_layer(WEIGHTS_C1, 1, 4, input, 28, c1_out, 24, 1, 0, FIRST_ACT_SCALE, SECOND_ACT_SCALE, 1 << WEIGHTS_C1_SCALE);
     relu(c1_out, 24 * 24 * 4);
+    //for (size_t i = 0; i < 24 * 24 * 4; ++i)
+    //  printf("%d vs %d, %s\n", c1_out[i], C1_OUT[i], (c1_out[i] == C1_OUT[i]) ? "true" : "FALSE");
     avgpool(c1_out, 24, 4, s2_out, 12);
-    conv_layer(WEIGHTS_C3, 4, 12, s2_out, 12, c3_out, 8, 1, 0, 1, 1 << WEIGHTS_C3_SCALE);
+    //for (size_t i = 0; i < 12 * 12 * 4; ++i)
+    //  printf("%d vs %d, %s\n", s2_out[i], S2_OUT[i], (s2_out[i] == S2_OUT[i]) ? "true" : "FALSE");
+    conv_layer(WEIGHTS_C3, 4, 12, s2_out, 12, c3_out, 8, 1, 0, SECOND_ACT_SCALE, THIRD_ACT_SCALE, 1 << WEIGHTS_C3_SCALE);
     relu(c3_out, 8 * 8 * 12);
+    //for (size_t i = 0; i < 8 * 8 * 12; ++i)
+    //  printf("%d vs %d, %s\n", c3_out[i], C3_OUT[i], (c3_out[i] == C3_OUT[i]) ? "true" : "FALSE");
     avgpool(c3_out, 8, 12, s4_out, 4);
-    fully_connected(WEIGHTS_OUT, s4_out, 4 * 4 * 12, output, 10, 1, 1 << WEIGHTS_OUT_SCALE);
+    //for (size_t i = 0; i < 4 * 4 * 12; ++i)
+    //  printf("%d vs %d, %s\n", s4_out[i], S4_OUT[i], (s4_out[i] == S4_OUT[i]) ? "true" : "FALSE");
+    fully_connected(WEIGHTS_OUT, s4_out, 4 * 4 * 12, output, 10, THIRD_ACT_SCALE, FOURTH_ACT_SCALE, 1 << WEIGHTS_OUT_SCALE);
+    //for (size_t i = 0; i < 10; ++i)
+    //  printf("%d vs %d, %s\n", output[i], FC_OUT[i], (output[i] == FC_OUT[i]) ? "true" : "FALSE");
     return argmax(output, 10);
 }
 
 int main(int argc, char argv[])
 {
-    //printf("Output: expected %d, got %d", LABEL_TEST_0, inference(INPUT_TEST_0));
     printf("Output: expected %d, got %d\n", LABEL, inference(INPUT));
 }

@@ -57,8 +57,8 @@ void convolve(
                 }
             }
             size_t output_idx = ((size_t) output_channel * out_size + oy) * out_size + ox;
-            output[output_idx] = rescale(sum, act_scale, weight_scale);
-            //output[output_idx] = sum;
+
+            output[output_idx] = rescale(sum, act_scale_a, act_scale_b, weight_scale);
         }
     }
 }
@@ -78,11 +78,24 @@ void conv_layer(
     }
 }
 
+// Pytorch uses banker's rounding when it divided integers. This differs from
+// C's default behaviour of always rounding towards 0.
+int32_t div_bankers_rounding(int32_t dividend, int32_t divisor)
+{
+    int32_t quotient = dividend / divisor;
+    int32_t remainder = dividend % divisor;
+    if (remainder * 2 > divisor || (remainder * 2 == divisor && (quotient % 2 != 0))) {
+        quotient++;
+    }
+    return quotient;
+}
+
 void avgpool(
     const param_t *input, size_p input_size, size_p input_channels,
     param_t *output, size_p output_size)
 {
     assert(output_size * POOL_SIZE == input_size);
+    const int32_t scaler = POOL_SIZE * POOL_SIZE;
     for (size_t ic = 0; ic < input_channels; ++ic)
     {
         for (size_t input_y = 0; input_y < input_size; input_y += POOL_SIZE) // stride equals pooling size
@@ -97,7 +110,8 @@ void avgpool(
                         sum += input[(ic * input_size + (input_y + offset_y)) * input_size + (input_x + offset_x)];
                     }
                 }
-                sum /= POOL_SIZE * POOL_SIZE;
+
+                sum = div_bankers_rounding(sum, scaler);
                 output[(ic * output_size + (input_y / POOL_SIZE)) * output_size
                     + (input_x / POOL_SIZE)] = sum;
             }
@@ -109,7 +123,8 @@ void fully_connected(
     const param_t *weights,
     const param_t *input, size_p input_size,
     param_t *output, size_p output_size,
-    size_p act_scale, size_p weight_scale)
+    size_p act_scale_a, size_p act_scale_b,
+    size_p weight_scale)
 {
     for (size_t o = 0; o < output_size; ++o)
     {
@@ -119,7 +134,7 @@ void fully_connected(
             size_t weight_idx = (size_t) o * input_size + i;
             sum += input[i] * weights[weight_idx];
         }
-        output[o] = rescale(sum, act_scale, weight_scale);
+        output[o] = rescale(sum, act_scale_a, act_scale_b, weight_scale);
     }
 }
 
@@ -148,9 +163,10 @@ param_t argmax(
 
 param_t rescale(
     int32_t input,
-    size_p act_scale,
+    size_p act_scale_a,
+    size_p act_scale_b,
     size_p weight_scale)
 {
-      int32_t tmp = llroundf(input * act_scale / weight_scale);
+      int32_t tmp = div_bankers_rounding(input * act_scale_b, act_scale_a * weight_scale);
       return clip(tmp, -128, 127);
 }

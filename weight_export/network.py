@@ -114,32 +114,63 @@ total = 0
 with torch.no_grad():
     capture_scales = args.report_scales
     output_predictions = args.report_predictions
-    scales = []
+    counter = 0
+    breaker = 646
     for images, labels in test_loader:
         images, labels = images.to(device), labels.to(device)
         x = model[0](images)
-        x = model[1](x)
-        x = model[2](x)
+        input_int = x.int().float()
         if capture_scales:
             scales.append(x.scale)
+        x = model[1](x)
+        weight_int = model[1].quant_weight().int().float()
+        c1_out = F.conv2d(input_int, weight_int, bias=None, stride=1, padding=0)
+        x = model[2](x)
+        if counter == breaker:
+            with open("c1_out.h", "w") as f:
+                f.write(numpy_to_c_array(x.cpu().int().flatten().numpy(), "c1_out", c_type="int32_t"))
+        if capture_scales:
+            scales.append(x.scale)
+        y = F.avg_pool2d(x.int().float(), 2)
         x = model[3](x)
+        if counter == breaker:
+            with open("s2_out.h", "w") as f:
+                f.write(numpy_to_c_array(x.cpu().int().flatten().numpy(), "s2_out", c_type="int32_t"))
         x = model[4](x)
         x = model[5](x)
+        if counter == breaker:
+            with open("c3_out.h", "w") as f:
+                f.write(numpy_to_c_array(x.cpu().int().flatten().numpy(), "c3_out", c_type="int32_t"))
         if capture_scales:
             scales.append(x.scale)
         x = model[6](x)
+        if counter == breaker:
+            with open("s4_out.h", "w") as f:
+                f.write(numpy_to_c_array(x.cpu().int().flatten().numpy(), "s4_out", c_type="int32_t"))
         x = model[7](x)
         x = model[8](x)
         outputs = model[9](x)
+        if counter == breaker:
+            with open("fc_out.h", "w") as f:
+                f.write(numpy_to_c_array(outputs.cpu().int().flatten().numpy(), "fc_out", c_type="int32_t"))
         if capture_scales:
             scales.append(outputs.scale)
             print(scales)
             capture_scales = False
+            with open("act_scales.h", "w") as f:
+                f.write("#include <stdint.h>\n")
+                f.write(f"#define FIRST_ACT_SCALE 1 << {-torch.log2(scales[0]).int()}\n")
+                f.write(f"#define SECOND_ACT_SCALE 1 << {-torch.log2(scales[1]).int()}\n")
+                f.write(f"#define THIRD_ACT_SCALE 1 << {-torch.log2(scales[2]).int()}\n")
+                f.write(f"#define FOURTH_ACT_SCALE 1 << {-torch.log2(scales[3]).int()}\n")
         _, predicted = torch.max(outputs.value, 1)
         total += labels.size(0)
         correct += (predicted == labels).sum().item()
         if output_predictions:
             print(predicted.data.item())
+        if counter == breaker:
+            break
+        counter += 1
 
 if args.report_accuracy:
     accuracy = 100 * correct / total

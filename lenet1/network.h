@@ -23,7 +23,7 @@ void fully_connected(
     const param_t *weights,
     const param_t *input, size_p input_size,
     param_t *output, size_p output_size,
-    size_p act_scale,
+    size_p act_scale_a, size_p act_scale_b,
     size_p weight_scale
     );
 
@@ -48,5 +48,6 @@ param_t argmax(
 
 param_t rescale(
     int32_t input,
-    size_p act_scale,
+    size_p act_scale_a,
+    size_p act_scale_b,
     size_p weight_scale);
