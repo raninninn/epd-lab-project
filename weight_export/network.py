@@ -111,6 +111,15 @@ model.eval()
 correct = 0
 total = 0
 
+def numpy_to_c_array(arr, var_name="my_array", c_type="param_t"):
+    shape = 1
+    for d in arr.shape:
+        shape *= d
+    body = np.array2string(arr, max_line_width=np.inf, separator=', ', threshold=np.inf)
+    body = body.replace('[', '{').replace(']', '}')
+    return f"const {c_type} {var_name.upper()}[{shape}] = {body};"
+
+scales = []
 with torch.no_grad():
     capture_scales = args.report_scales
     output_predictions = args.report_predictions
@@ -155,7 +164,6 @@ with torch.no_grad():
                 f.write(numpy_to_c_array(outputs.cpu().int().flatten().numpy(), "fc_out", c_type="int32_t"))
         if capture_scales:
             scales.append(outputs.scale)
-            print(scales)
             capture_scales = False
             with open("act_scales.h", "w") as f:
                 f.write("#include <stdint.h>\n")
@@ -173,14 +181,6 @@ with torch.no_grad():
 if args.report_accuracy:
     accuracy = 100 * correct / total
     print(f'Accuracy on the test set: {accuracy:.2f}%')
-
-def numpy_to_c_array(arr, var_name="my_array", c_type="param_t"):
-    shape = 1
-    for d in arr.shape:
-        shape *= d
-    body = np.array2string(arr, max_line_width=np.inf, separator=', ', threshold=np.inf)
-    body = body.replace('[', '{').replace(']', '}')
-    return f"const {c_type} {var_name.upper()}[{shape}] = {body};"
 
 def export_weights(layer_index, layer_name):
     fname = f"{layer_name}.h"
