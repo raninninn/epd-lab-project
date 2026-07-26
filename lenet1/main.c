@@ -9,13 +9,11 @@
 
 // These includes contain comparison outputs for each layer. They can be gene-
 // rated for a specific input by network.py.
-/*
 #include "../weight_export/c1_out.h"
 #include "../weight_export/s2_out.h"
 #include "../weight_export/c3_out.h"
 #include "../weight_export/s4_out.h"
 #include "../weight_export/fc_out.h"
-*/
 
 param_t inference(param_t *input)
 {
