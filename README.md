@@ -1,7 +1,7 @@
 # Final project for the Customized Embedded Processor lab at CES
 ## What does this do?
 Implement an accelerator for a LeNet1 type neural network on the RealDigital Blackboard, using both PS and PL. The network is quantized with integer quantization. Weights are stored in BRAM.
-On a Ryzen 8500G, we can run the C implementation in 17.5 seconds.
+On a Ryzen 8500G, we can run the C implementation in 4.66 seconds.
 ## How can I reproduce the test environment?
 1. Export all test inputs.
 ```
@@ -21,11 +21,12 @@ After setting up the test environment,
 ```
 $ cd weight_export && python network.py --report-predictions > preds.txt
 ```
-2. Get predictions from the C implementation
+2. Compile with `-DPRINT_LABELS`
+3. Get predictions from the C implementation
 ```
-$ cd ../lenet1 && ./runner.sh > preds.txt
+$ cd ../lenet1 && time ./a.out > preds.txt
 ```
-3. Compare using diff
+4. Compare using diff
 ```
 $ diff -q preds.txt ../weight_export/preds.txt
 ```

@@ -1,6 +1,0 @@
-#!/bin/bash
-for ((i=0; i < 10000; i++ )); do
-  rm test.h
-  ln -s "../data_export/inputs/test_$i.h" test.h
-  gcc main.c network.c -lm -DLABEL=LABEL_TEST_$i -DINPUT=INPUT_TEST_$i -o "out/test_$i.out"
-done
