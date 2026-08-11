@@ -1,0 +1,35 @@
+# IDE
+.idea/
+.vscode/
+
+# C build output
+cmake-build-*/
+build/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+data/
+
+# Vivado/Vitis regenerable output (submission ships sources + bd.tcl + .xsa/.bit)
+.Xil/
+*.jou
+*.log
+*.str
+*.runs/
+*.gen/
+*.cache/
+*.sim/
+*.ip_user_files/
+.metadata/
+.analytics/
+_ide/
+
+# captured result logs are intentional content
+!results/**/*.log
+
+# OS
+Thumbs.db
+.DS_Store
