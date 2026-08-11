@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <time.h>
 
 #include "network.h"
 #include "../weight_export/weights_c1.h" // contains weights
@@ -16,6 +17,8 @@
 #include "../weight_export/c3_out.h"
 #include "../weight_export/s4_out.h"
 #include "../weight_export/fc_out.h"
+
+#define NUM_RUNS 2000
 
 size_p inference(param_t *input)
 {
@@ -63,14 +66,18 @@ int main(int argc, char argv[])
 {
     // Use your compiler to add definitions for LABEL and INPUT, e.g. LABEL=LABEL_0
     int sum = 0;
-    for (int i = 0; i < NUM_TESTS; ++i) {
+    clock_t start = clock();
+    for (int i = 0; i < NUM_RUNS; ++i) {
         size_p result = inference(TEST_IMAGES[i]);
         sum += result == TEST_LABELS[i];
 #ifdef PRINT_LABELS
         printf("Output: expected %d, got %d\n", TEST_LABELS[i], result);
 #endif
     }
+    clock_t end = clock();
+    double total = (double)(end - start) / CLOCKS_PER_SEC;
+    printf("Avg. runtime per image: %.3f\n", total * 1000 / NUM_RUNS);
 #ifndef PRINT_LABELS
-    printf("Accuracy: %f\n", (float)sum / NUM_TESTS);
+    printf("Accuracy: %f\n", (float)sum / NUM_RUNS);
 #endif
 }
