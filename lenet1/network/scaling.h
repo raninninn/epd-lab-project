@@ -15,17 +15,13 @@
  *
  * @return The clipped and rescaled input value
  */
-param_t rescale(
-    int32_t input,
-    size_p act_scale_a,
-    size_p act_scale_b,
-    size_p weight_scale);
+param_t rescale(int32_t input,
+                size_p act_scale_a,
+                size_p act_scale_b,
+                size_p weight_scale);
 
 /*
  * Clips the given input value to the range of [min, max]
  */
-param_t clip(
-    int32_t input,
-    param_t min,
-    param_t max);
+param_t clip(int32_t input, param_t min, param_t max);
 #endif

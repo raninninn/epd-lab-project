@@ -13,7 +13,6 @@
  * @param output: The output location
  * @param output_size: The size of the output in one dimension
  */
-void avgpool(
-    const param_t *input, size_p input_size, size_p input_channels,
-    param_t *output, size_p output_size
-    );
+void avgpool(const param_t *input,
+             size_p input_size, size_p input_channels,
+             param_t *output, size_p output_size);

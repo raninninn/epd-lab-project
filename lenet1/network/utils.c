@@ -16,10 +16,8 @@ size_p argmax(
     const param_t *input, size_p input_size)
 {
     param_t max_index = 0;
-    for (size_t i = 0; i < input_size; ++i)
-    {
-        if (input[i] > input[max_index])
-        {
+    for (size_t i = 0; i < input_size; ++i) {
+        if (input[i] > input[max_index]) {
             max_index = i;
         }
     }

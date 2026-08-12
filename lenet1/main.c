@@ -8,8 +8,6 @@
 #include "../weight_export/act_scales.h" // contains quantization scales for activations
 #include "../data_export/all_tests.h"
 
-//#include "test.h" // in our testing environment, this is a symlink to the current.
-
 // These includes contain comparison outputs for each layer. They can be gene-
 // rated for a specific input by network.py.
 #include "../weight_export/c1_out.h"
@@ -18,7 +16,7 @@
 #include "../weight_export/s4_out.h"
 #include "../weight_export/fc_out.h"
 
-#define NUM_RUNS 2000
+#define NUM_RUNS 2000 // Change to 10000 to test all images
 
 size_p inference(param_t *input)
 {
@@ -64,7 +62,6 @@ size_p inference(param_t *input)
 
 int main(int argc, char argv[])
 {
-    // Use your compiler to add definitions for LABEL and INPUT, e.g. LABEL=LABEL_0
     int sum = 0;
     clock_t start = clock();
     for (int i = 0; i < NUM_RUNS; ++i) {

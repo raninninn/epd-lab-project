@@ -12,11 +12,9 @@ void fully_connected(
     size_p act_scale_a, size_p act_scale_b,
     size_p weight_scale)
 {
-    for (size_t o = 0; o < output_size; ++o)
-    {
+    for (size_t o = 0; o < output_size; ++o) {
         int32_t sum = 0;
-        for (size_t i = 0; i < input_size; ++i)
-        {
+        for (size_t i = 0; i < input_size; ++i) {
             size_t weight_idx = (size_t) o * input_size + i;
             sum += input[i] * weights[weight_idx];
         }
